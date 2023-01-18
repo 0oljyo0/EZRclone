@@ -2,16 +2,20 @@ import sys
 from PyQt5.QtWidgets import (
     QMainWindow, QAction, qApp, QApplication, 
     QHBoxLayout,QVBoxLayout,QLabel,QPushButton,
-    QWidget,QTabWidget,QListWidget,QSpacerItem,QSizePolicy
+    QWidget,QTabWidget,QListWidget,QSpacerItem,QSizePolicy,QFileDialog,QLineEdit,QFormLayout,QCheckBox
 )
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
-
+from setting import SettingManger
+import os
+from autorun import check
 class BasicMenubar(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)        
         
         self.initMainWindow()
+
+        self.setting = SettingManger()
     
     def initMenu(self):
         exitAction = QAction('&Exit', self)        
@@ -22,6 +26,8 @@ class BasicMenubar(QMainWindow):
         setAction = QAction('&Setting', self)        
         setAction.setShortcut('Ctrl+E')
         setAction.setStatusTip('Exit application')
+        setAction.triggered.connect(self.settingEvent)
+
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
@@ -29,93 +35,6 @@ class BasicMenubar(QMainWindow):
         fileMenu.addAction(setAction)
 
         setMenu = menubar.addMenu('&Help')
-    
-    def inittest(self):
-        ############主窗口控件####################
-        # 全局布局
-        alllayout = QHBoxLayout()
-
-        # 局部布局
-        # 右垂直布局
-        vlayout1 = QVBoxLayout()
-
-        v1_hlayout1 = QHBoxLayout()  ##右上水平布局
-        v1_h1_hlayout1 = QVBoxLayout()  ###右上右垂直布局
-        v1_h1_hlayout2 = QVBoxLayout()  ###右上左垂直布局
-
-        v1_hlayout2 = QHBoxLayout()  ##右下水平布局
-        # 左垂直布局
-        vlayout2 = QVBoxLayout()
-        self.lab1 = QLabel('1区')
-        self.lab1.setFixedSize(800, 600)
-        self.lab1.setStyleSheet("QLabel{background:yellow;}")
-        self.btn1 = QPushButton("测试11")
-        self.btn2 = QPushButton("测试12")
-        self.btn3 = QPushButton("测试13")
-        self.btn4 = QPushButton("测试14")
-        self.lab2 = QLabel('2区')
-        self.lab2.setFixedSize(300, 20)
-        self.lab2.setStyleSheet("QLabel{background:yellow;}")
-        self.btn5 = QPushButton("测试21")
-        self.btn6 = QPushButton("测试22")
-        self.btn7 = QPushButton("测试23")
-        self.btn8 = QPushButton("测试24")
-        self.lab3 = QLabel('3区')
-        self.lab3.setFixedSize(100, 100)
-        self.lab3.setStyleSheet("QLabel{background:yellow;}")
-        self.btn9 = QPushButton("测试31")
-        self.btn10 = QPushButton("测试32")
-        self.btn11 = QPushButton("测试33")
-        self.btn12 = QPushButton("测试34")
-        self.lab4 = QLabel('4区')
-        self.lab4.setFixedHeight(20)
-        self.lab4.setStyleSheet("QLabel{background:yellow;}")
-        self.btn13 = QPushButton("测试41")
-        self.btn14 = QPushButton("测试42")
-        self.btn15 = QPushButton("测试43")
-        self.btn16 = QPushButton("测试44")
-        
-        # 在局部布局中添加控件
-        v1_h1_hlayout1.addWidget(self.lab2)
-        v1_h1_hlayout1.addWidget(self.btn5)
-        v1_h1_hlayout1.addWidget(self.btn6)
-        v1_h1_hlayout1.addWidget(self.btn7)
-        v1_h1_hlayout1.addWidget(self.btn8)
-        v1_h1_hlayout1.addStretch(0)
-
-        v1_h1_hlayout2.addWidget(self.lab1)
-        v1_h1_hlayout2.addWidget(self.btn1)
-        v1_h1_hlayout2.addWidget(self.btn2)
-        v1_h1_hlayout2.addWidget(self.btn3)
-        v1_h1_hlayout2.addWidget(self.btn4)
-        v1_h1_hlayout2.addStretch(0)
-
-        v1_hlayout2.addWidget(self.lab3)
-        v1_hlayout2.addWidget(self.btn9)
-        v1_hlayout2.addWidget(self.btn10)
-        v1_hlayout2.addWidget(self.btn11)
-        v1_hlayout2.addWidget(self.btn12)
-
-        vlayout2.addWidget(self.lab4)
-        vlayout2.addWidget(self.btn13)
-        vlayout2.addWidget(self.btn14)
-        vlayout2.addWidget(self.btn15)
-        vlayout2.addWidget(self.btn16)
-
-        vlayout2.addStretch(0)
-        v1_hlayout1.addLayout(v1_h1_hlayout1)
-        v1_hlayout1.addLayout(v1_h1_hlayout2)
-
-        vlayout1.addLayout(v1_hlayout1)
-        vlayout1.addLayout(v1_hlayout2)
-
-        # 局部布局添加到全局布局
-        alllayout.addLayout(vlayout1)
-        alllayout.addLayout(vlayout2)
-
-        widget = QWidget()
-        widget.setLayout(alllayout)
-        self.setCentralWidget(widget)
 
     def initCentrolWindow(self):
         remotesTab = self.buildRemotesTab()
@@ -142,7 +61,6 @@ class BasicMenubar(QMainWindow):
         remotesListWidget.addItem("remote3")
 
         btn_config = QPushButton("Config")
-        btn_config.clicked.connect(self.showSettingWindow)
         btn_bbb= QPushButton("bbb")
         spacerItem = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         btn_ccc = QPushButton("ccc")
@@ -164,7 +82,12 @@ class BasicMenubar(QMainWindow):
         self.setWindowTitle('QRclone')    
         self.show()
     
-    def showSettingWindow(self):
+    # def showSettingWindow(self):
+    #     self.child_window = SettingWidget()
+    #     self.child_window.setWindowModality(Qt.ApplicationModal)
+    #     self.child_window.show()
+    
+    def settingEvent(self):
         self.child_window = SettingWidget()
         self.child_window.setWindowModality(Qt.ApplicationModal)
         self.child_window.show()
@@ -175,10 +98,60 @@ class SettingWidget(QWidget):
         super().__init__()
         # self.setWindowTitle("我是子窗口啊")
         self.initMainWindow()
+        self.rclonePath = ''
+        self.settingManger = SettingManger()
 
     def initMainWindow(self):    
         self.resize(640,320)
-        # self.initMenu()
-        # self.initCentrolWindow()
-        self.setWindowTitle('Setting')    
-        # self.show()
+
+        self.initSettingWindow()
+
+        self.setWindowTitle('Setting')
+    
+    def initSettingWindow(self):
+        settingMainLayerout = QVBoxLayout()
+
+        btnFindRclone = QPushButton("浏览")
+        settingFindRcloneLable = QLabel("Rclone.exe 路径")
+        self.settingFindRcloneLineEdit = QLineEdit()
+        self.settingFindRcloneLineEdit.setReadOnly(True)
+        settingFindRcloneLayerout = QHBoxLayout()
+        btnFindRclone.clicked.connect(self.getRclonePath)
+        settingFindRcloneLayerout.addWidget(settingFindRcloneLable)
+        settingFindRcloneLayerout.addWidget(self.settingFindRcloneLineEdit)
+        settingFindRcloneLayerout.addWidget(btnFindRclone)
+
+
+        btnRcloneConf = QPushButton("浏览")
+        settingRcloneConfLable = QLabel("Rclone.conf 路径")
+        self.settingRcloneConfLineEdit = QLineEdit()
+        self.settingRcloneConfLineEdit.setReadOnly(True)
+        settingRcloneConfLayerout = QHBoxLayout()
+        btnRcloneConf.clicked.connect(self.getRcloneConfPath)
+        settingRcloneConfLayerout.addWidget(settingRcloneConfLable)
+        settingRcloneConfLayerout.addWidget(self.settingRcloneConfLineEdit)
+        settingRcloneConfLayerout.addWidget(btnRcloneConf)
+
+        self.autorunCheckBox = QCheckBox("开机启动")
+        self.autorunCheckBox.stateChanged.connect(self.autorunEvent)
+
+        settingMainLayerout.addLayout(settingFindRcloneLayerout)
+        settingMainLayerout.addLayout(settingRcloneConfLayerout)
+        settingMainLayerout.addWidget(self.autorunCheckBox)
+        self.setLayout(settingMainLayerout)
+    
+    def getRclonePath(self):
+        self.rclonePath, _ = QFileDialog.getOpenFileName(self, "打开文件", '.', '*.exe')
+        self.settingFindRcloneLineEdit.setText(self.rclonePath)
+        self.settingManger.update('RclonePath', self.rclonePath)
+
+    def getRcloneConfPath(self):
+        self.rcloneConfPath, _ = QFileDialog.getOpenFileName(self, "打开文件", '.', '*.conf')
+        self.settingRcloneConfLineEdit.setText(self.rcloneConfPath)
+        self.settingManger.update('RcloneConfPath', self.rcloneConfPath)
+    
+    def autorunEvent(self):
+        if self.autorunCheckBox.isChecked():
+            check(1)
+        else:
+            check(0)
