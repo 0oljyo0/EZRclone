@@ -1,7 +1,11 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QHBoxLayout,QVBoxLayout,QLabel,QPushButton,QWidget,QTabWidget
+from PyQt5.QtWidgets import (
+    QMainWindow, QAction, qApp, QApplication, 
+    QHBoxLayout,QVBoxLayout,QLabel,QPushButton,
+    QWidget,QTabWidget,QListWidget,QSpacerItem,QSizePolicy
+)
 from PyQt5.QtGui import QIcon
-
+from PyQt5.QtCore import Qt
 
 class BasicMenubar(QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -114,27 +118,67 @@ class BasicMenubar(QMainWindow):
         self.setCentralWidget(widget)
 
     def initCentrolWindow(self):
-        aaaTab = QWidget()
+        remotesTab = self.buildRemotesTab()
+
         bbbTab = QWidget()
         cccTab = QWidget()
 
         tabWidget = QTabWidget()
-        tabWidget.addTab(aaaTab, "aaa")
+        tabWidget.addTab(remotesTab, "Remotes")
         tabWidget.addTab(bbbTab, "bbb")
         tabWidget.addTab(cccTab, "ccc")
         self.setCentralWidget(tabWidget)
-        
 
+    def buildRemotesTab(self):
+        remotesTab = QWidget()
+        remotesTabMainLayerout = QVBoxLayout()
+
+        remotesTabBodyLayerout = QHBoxLayout()
+        remotesTabButtonLayerout = QHBoxLayout()
+
+        remotesListWidget = QListWidget()
+        remotesListWidget.addItem("remote1")
+        remotesListWidget.addItem("remote2")
+        remotesListWidget.addItem("remote3")
+
+        btn_config = QPushButton("Config")
+        btn_config.clicked.connect(self.showSettingWindow)
+        btn_bbb= QPushButton("bbb")
+        spacerItem = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        btn_ccc = QPushButton("ccc")
+        remotesTabButtonLayerout.addWidget(btn_config)
+        remotesTabButtonLayerout.addWidget(btn_bbb)
+        remotesTabButtonLayerout.addItem(spacerItem)
+        remotesTabButtonLayerout.addWidget(btn_ccc)
+
+        remotesTabMainLayerout.addWidget(remotesListWidget)
+        remotesTabMainLayerout.addLayout(remotesTabButtonLayerout)
+
+        remotesTab.setLayout(remotesTabMainLayerout)
+        return remotesTab
+    
     def initMainWindow(self):    
         self.resize(512,512)
         self.initMenu()
         self.initCentrolWindow()
-        self.setWindowTitle('PyQt5 Basic Menubar')    
+        self.setWindowTitle('QRclone')    
         self.show()
-        
-        
-# if __name__ == '__main__':
     
-    # app = QApplication(sys.argv)
-    # ex = basicMenubar()
-    # sys.exit(app.exec_())
+    def showSettingWindow(self):
+        self.child_window = SettingWidget()
+        self.child_window.setWindowModality(Qt.ApplicationModal)
+        self.child_window.show()
+
+        
+class SettingWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        # self.setWindowTitle("我是子窗口啊")
+        self.initMainWindow()
+
+    def initMainWindow(self):    
+        self.resize(640,320)
+        # self.initMenu()
+        # self.initCentrolWindow()
+        self.setWindowTitle('Setting')    
+        # self.show()
