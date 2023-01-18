@@ -9,6 +9,7 @@ from PyQt5.QtCore import Qt
 from setting import SettingManger
 import os
 from autorun import check
+from path import appdata_path
 class BasicMenubar(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)        
@@ -28,11 +29,17 @@ class BasicMenubar(QMainWindow):
         setAction.setStatusTip('Exit application')
         setAction.triggered.connect(self.settingEvent)
 
+        cleanSetAction = QAction('&CleanSetting', self)        
+        # cleanSetAction.setShortcut('Ctrl+E')
+        cleanSetAction.setStatusTip('Exit application')
+        cleanSetAction.triggered.connect(self.cleanSetting)
+
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(exitAction)
         fileMenu.addAction(setAction)
+        fileMenu.addAction(cleanSetAction)
 
         setMenu = menubar.addMenu('&Help')
 
@@ -91,15 +98,19 @@ class BasicMenubar(QMainWindow):
         self.child_window = SettingWidget()
         self.child_window.setWindowModality(Qt.ApplicationModal)
         self.child_window.show()
-
+    
+    def cleanSetting(self):
+        # print(appdata_path()+"\qrclone\setting.json")
+        os.system("del "+appdata_path()+"\qrclone\setting.json")
         
 class SettingWidget(QWidget):
     def __init__(self):
         super().__init__()
         # self.setWindowTitle("我是子窗口啊")
-        self.initMainWindow()
         self.rclonePath = ''
         self.settingManger = SettingManger()
+
+        self.initMainWindow()
 
     def initMainWindow(self):    
         self.resize(640,320)
@@ -133,6 +144,10 @@ class SettingWidget(QWidget):
         settingRcloneConfLayerout.addWidget(btnRcloneConf)
 
         self.autorunCheckBox = QCheckBox("开机启动")
+        if self.settingManger.setting_dict['AutoStart'] == "True":
+            self.autorunCheckBox.setChecked(True)
+        else:
+            self.autorunCheckBox.setChecked(False)
         self.autorunCheckBox.stateChanged.connect(self.autorunEvent)
 
         settingMainLayerout.addLayout(settingFindRcloneLayerout)
@@ -152,6 +167,8 @@ class SettingWidget(QWidget):
     
     def autorunEvent(self):
         if self.autorunCheckBox.isChecked():
+            self.settingManger.update('AutoStart', "True")
             check(1)
         else:
+            self.settingManger.update('AutoStart', "False")
             check(0)

@@ -9,7 +9,10 @@ class SettingManger():
             os.makedirs(appdata_path()+"/qrclone")
 
         self.setting_dict = {
-            "title":"QRcloneSetting"
+            "title": "QRcloneSetting",
+            "RclonePath": "",
+            "RcloneConfPath": "",
+            "AutoStart": "False",
         }
 
         try:
