@@ -1,8 +1,13 @@
 import json
+from path import appdata_path
+import os
 
 class SettingManger():
     def __init__(self):
-        self.setting_file_path = "./setting.json"
+        self.setting_file_path = appdata_path()+"/qrclone/setting.json"
+        if not os.path.exists(appdata_path()+"/qrclone"):
+            os.makedirs(appdata_path()+"/qrclone")
+
         self.setting_dict = {
             "title":"QRcloneSetting"
         }

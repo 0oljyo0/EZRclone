@@ -1,7 +1,7 @@
 import sys
 import os
 from PyQt5.QtWidgets import QApplication, QWidget
-from gui import BasicMenubar
+# from gui import BasicMenubar
 
 
 def app_path():
@@ -11,5 +11,10 @@ def app_path():
         return os.path.dirname(sys.executable)
     return os.path.dirname(__file__)
 
-# if __name__=='__main__':
-#     print(app_path())
+def appdata_path():
+    appdata = os.getenv("APPDATA")
+    # print(appdata)
+    return appdata
+
+if __name__=='__main__':
+    print(appdata_path())

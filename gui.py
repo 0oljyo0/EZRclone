@@ -113,7 +113,7 @@ class SettingWidget(QWidget):
 
         btnFindRclone = QPushButton("浏览")
         settingFindRcloneLable = QLabel("Rclone.exe 路径")
-        self.settingFindRcloneLineEdit = QLineEdit()
+        self.settingFindRcloneLineEdit = QLineEdit(self.settingManger.setting_dict['RclonePath'])
         self.settingFindRcloneLineEdit.setReadOnly(True)
         settingFindRcloneLayerout = QHBoxLayout()
         btnFindRclone.clicked.connect(self.getRclonePath)
@@ -124,7 +124,7 @@ class SettingWidget(QWidget):
 
         btnRcloneConf = QPushButton("浏览")
         settingRcloneConfLable = QLabel("Rclone.conf 路径")
-        self.settingRcloneConfLineEdit = QLineEdit()
+        self.settingRcloneConfLineEdit = QLineEdit(self.settingManger.setting_dict['RcloneConfPath'])
         self.settingRcloneConfLineEdit.setReadOnly(True)
         settingRcloneConfLayerout = QHBoxLayout()
         btnRcloneConf.clicked.connect(self.getRcloneConfPath)
