@@ -10,6 +10,13 @@ from setting import SettingManger
 import os
 from autorun import check
 from path import appdata_path
+# coding=utf-8
+import configparser
+import os
+
+
+
+
 class BasicMenubar(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)        
@@ -46,16 +53,17 @@ class BasicMenubar(QMainWindow):
     def initCentrolWindow(self):
         remotesTab = self.buildRemotesTab()
 
-        bbbTab = QWidget()
+        mountTab = self.buildMountsTab()
         cccTab = QWidget()
 
         tabWidget = QTabWidget()
         tabWidget.addTab(remotesTab, "Remotes")
-        tabWidget.addTab(bbbTab, "bbb")
+        tabWidget.addTab(mountTab, "Mounts")
         tabWidget.addTab(cccTab, "ccc")
         self.setCentralWidget(tabWidget)
 
-    def buildRemotesTab(self):
+    def buildMountsTab(self):
+        # baseWidget = QWidget()
         remotesTab = QWidget()
         remotesTabMainLayerout = QVBoxLayout()
 
@@ -68,11 +76,11 @@ class BasicMenubar(QMainWindow):
         remotesListWidget.addItem("remote3")
 
         btn_config = QPushButton("Config")
-        btn_bbb= QPushButton("bbb")
+        btn_mount= QPushButton("mount")
         spacerItem = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         btn_ccc = QPushButton("ccc")
         remotesTabButtonLayerout.addWidget(btn_config)
-        remotesTabButtonLayerout.addWidget(btn_bbb)
+        remotesTabButtonLayerout.addWidget(btn_mount)
         remotesTabButtonLayerout.addItem(spacerItem)
         remotesTabButtonLayerout.addWidget(btn_ccc)
 
@@ -81,7 +89,41 @@ class BasicMenubar(QMainWindow):
 
         remotesTab.setLayout(remotesTabMainLayerout)
         return remotesTab
+
+    def buildRemotesTab(self):
+        remotesTab = QWidget()
+        remotesTabMainLayerout = QVBoxLayout()
+
+        remotesTabBodyLayerout = QHBoxLayout()
+        remotesTabButtonLayerout = QHBoxLayout()
+
+        self.remotesListWidget = QListWidget()
+        self.remotesListWidget.addItem("remote1")
+        self.remotesListWidget.addItem("remote2")
+        self.remotesListWidget.addItem("remote3")
+
+        btn_config = QPushButton("Config")
+        btn_refresh = QPushButton("Refresh")
+        btn_refresh.clicked.connect(self.refreshRemotesTab)
+        spacerItem = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        btn_ccc = QPushButton("ccc")
+        remotesTabButtonLayerout.addWidget(btn_config)
+        remotesTabButtonLayerout.addWidget(btn_refresh)
+        remotesTabButtonLayerout.addItem(spacerItem)
+        remotesTabButtonLayerout.addWidget(btn_ccc)
+
+        remotesTabMainLayerout.addWidget(self.remotesListWidget)
+        remotesTabMainLayerout.addLayout(remotesTabButtonLayerout)
+
+        remotesTab.setLayout(remotesTabMainLayerout)
+        return remotesTab
     
+    def refreshRemotesTab(self):
+        rclone_config_file = appdata_path()+"/rclone/rclone.conf"
+        cf = configparser.ConfigParser()
+        filename = cf.read(rclone_config_file)
+        print(cf.sections())
+
     def initMainWindow(self):    
         self.resize(512,512)
         self.initMenu()
