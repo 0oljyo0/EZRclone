@@ -2,10 +2,11 @@ import sys
 from PyQt5.QtWidgets import (
     QMainWindow, QAction, qApp, QApplication, 
     QHBoxLayout,QVBoxLayout,QLabel,QPushButton,
-    QWidget,QTabWidget,QListWidget,QSpacerItem,QSizePolicy,QFileDialog,QLineEdit,QFormLayout,QCheckBox
+    QWidget,QTabWidget,QListWidget,QSpacerItem,QSizePolicy,QFileDialog,QLineEdit,QFormLayout,QCheckBox,
+    QListWidgetItem
 )
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from setting import SettingManger
 import os
 from autorun import check
@@ -24,7 +25,14 @@ class BasicMenubar(QMainWindow):
         self.initMainWindow()
 
         self.setting = SettingManger()
-    
+
+    def initMainWindow(self):    
+        self.resize(512,512)
+        self.initMenu()
+        self.initCentrolWindow()
+        self.setWindowTitle('QRclone')    
+        self.show()
+
     def initMenu(self):
         exitAction = QAction('&Exit', self)        
         exitAction.setShortcut('Ctrl+Q')
@@ -70,10 +78,8 @@ class BasicMenubar(QMainWindow):
         remotesTabBodyLayerout = QHBoxLayout()
         remotesTabButtonLayerout = QHBoxLayout()
 
-        remotesListWidget = QListWidget()
-        remotesListWidget.addItem("remote1")
-        remotesListWidget.addItem("remote2")
-        remotesListWidget.addItem("remote3")
+        self.mountsListWidget = QListWidget()
+        self.refreshMountsTab()
 
         btn_config = QPushButton("Config")
         btn_mount= QPushButton("mount")
@@ -84,11 +90,42 @@ class BasicMenubar(QMainWindow):
         remotesTabButtonLayerout.addItem(spacerItem)
         remotesTabButtonLayerout.addWidget(btn_ccc)
 
-        remotesTabMainLayerout.addWidget(remotesListWidget)
+        remotesTabMainLayerout.addWidget(self.mountsListWidget)
         remotesTabMainLayerout.addLayout(remotesTabButtonLayerout)
 
         remotesTab.setLayout(remotesTabMainLayerout)
         return remotesTab
+
+    def refreshMountsTab(self):
+        rclone_config_file = appdata_path()+"/rclone/rclone.conf"
+        rclone_conf = configparser.ConfigParser()
+        filename = rclone_conf.read(rclone_config_file)
+
+        self.mountsListWidget.clear()
+        for remotesListWidgetItem in rclone_conf.sections():
+            # self.remotesListWidget.addItem(remotesListWidgetItem)
+            item = QListWidgetItem() # 创建QListWidgetItem对象
+            item.setSizeHint(QSize(0, 50)) # 设置QListWidgetItem大小
+            widget = self.buileMountItem(remotesListWidgetItem)#QPushButton("bbbbbbb")
+            self.mountsListWidget.addItem(item) # 添加item
+            self.mountsListWidget.setItemWidget(item, widget) # 为item设置widget
+
+
+    def buileMountItem(self,title):
+        mountItem = QWidget()
+        mountItemMainLayerout = QHBoxLayout()
+
+        text = QLabel(title)
+        autoMountCheckBox = QCheckBox("自动挂载")
+        btn_config = QPushButton("Config")
+
+        mountItemMainLayerout.addWidget(text)
+        mountItemMainLayerout.addWidget(autoMountCheckBox)
+        mountItemMainLayerout.addWidget(btn_config)
+        
+        mountItem.setLayout(mountItemMainLayerout)
+        return mountItem
+
 
     def buildRemotesTab(self):
         remotesTab = QWidget()
@@ -98,9 +135,7 @@ class BasicMenubar(QMainWindow):
         remotesTabButtonLayerout = QHBoxLayout()
 
         self.remotesListWidget = QListWidget()
-        self.remotesListWidget.addItem("remote1")
-        self.remotesListWidget.addItem("remote2")
-        self.remotesListWidget.addItem("remote3")
+        self.refreshRemotesTab()
 
         btn_config = QPushButton("Config")
         btn_refresh = QPushButton("Refresh")
@@ -120,22 +155,14 @@ class BasicMenubar(QMainWindow):
     
     def refreshRemotesTab(self):
         rclone_config_file = appdata_path()+"/rclone/rclone.conf"
-        cf = configparser.ConfigParser()
-        filename = cf.read(rclone_config_file)
-        print(cf.sections())
+        rclone_conf = configparser.ConfigParser()
+        filename = rclone_conf.read(rclone_config_file)
 
-    def initMainWindow(self):    
-        self.resize(512,512)
-        self.initMenu()
-        self.initCentrolWindow()
-        self.setWindowTitle('QRclone')    
-        self.show()
-    
-    # def showSettingWindow(self):
-    #     self.child_window = SettingWidget()
-    #     self.child_window.setWindowModality(Qt.ApplicationModal)
-    #     self.child_window.show()
-    
+        self.remotesListWidget.clear()
+        for remotesListWidgetItem in rclone_conf.sections():
+            self.remotesListWidget.addItem(remotesListWidgetItem)
+
+
     def settingEvent(self):
         self.child_window = SettingWidget()
         self.child_window.setWindowModality(Qt.ApplicationModal)
