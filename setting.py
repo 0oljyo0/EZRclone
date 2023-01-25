@@ -13,6 +13,7 @@ class SettingManger():
             "RclonePath": "",
             "RcloneConfPath": "",
             "AutoStart": "False",
+            "AutoMounts": [],
         }
 
         try:
