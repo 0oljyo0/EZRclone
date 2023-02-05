@@ -10,4 +10,5 @@ if __name__=='__main__':
     print(app_path())
     app = QApplication(sys.argv)
     ex = BasicMenubar()
+    print(ex)
     sys.exit(app.exec_())
