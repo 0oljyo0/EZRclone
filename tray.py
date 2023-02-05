@@ -6,6 +6,7 @@ import time
 from gui import BasicMenubar
 from PyQt5 import QtCore
 import os
+import subprocess
 # 函数功能：在textBrowser中添加hello world字段
 # 输入参数：ui对象
 # 输出参数：
@@ -47,7 +48,8 @@ class TrayIcon(QtWidgets.QSystemTrayIcon):
         
  
     def quit(self):
-        os.system('taskkill /F /IM '+self.ui.setting.setting_dict['RclonePath'].split("/")[-1])
+        cmd = 'taskkill /F /IM '+self.ui.setting.setting_dict['RclonePath'].split("/")[-1]
+        res = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         QtWidgets.qApp.quit()
  
     #鼠标点击icon传递的信号会带有一个整形的值，1是表示单击右键，2是双击，3是单击左键，4是用鼠标中键点击

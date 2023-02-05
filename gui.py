@@ -24,7 +24,7 @@ from winds.createNewMountWindow import CreateNewMountWidget
 import threading
 
 import os
-
+import subprocess
 
 class BasicMenubar(QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -56,8 +56,9 @@ class BasicMenubar(QMainWindow):
         print("task",mountInfo)
         cmd = self.setting.setting_dict['RclonePath']+" "+"mount"+" "+mountInfo['name']+":"+mountInfo['RemoteAbsolutePath']+" "+mountInfo['LocalDeviceId']
         print(cmd)
-        os.system(cmd)
-
+        # os.system(cmd)
+        res = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
     def initAllWindow(self):    
         self.resize(512,512)
         self.initMenuBar()
@@ -318,13 +319,20 @@ class BasicMenubar(QMainWindow):
         os.system("del "+appdata_path()+"\qrclone\setting.json")
     
     def closeEvent(self, event):
-        result = QMessageBox.question(self, "标题", "最小化到系统托盘？", QMessageBox.Yes | QMessageBox.No)
+        result = QMessageBox.question(self, "标题", "确认退出吗？否则最小化到系统托盘", QMessageBox.Yes | QMessageBox.No)
+        # print(result)
+        # print(QMessageBox.Yes)
+        # print(QMessageBox.No)
         if(result == QMessageBox.Yes):
+            # self.setWindowFlags(QtCore.Qt.Window)
+            self.setVisible(False)
+            # os.system('taskkill /F /IM '+self.setting.setting_dict['RclonePath'].split("/")[-1])
+            cmd = 'taskkill /F /IM '+self.setting.setting_dict['RclonePath'].split("/")[-1]
+            res = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            QtWidgets.qApp.quit()
+            # event.accept()
+        elif(result == QMessageBox.No):
             self.setWindowFlags(QtCore.Qt.SplashScreen | QtCore.Qt.FramelessWindowHint)
             event.ignore()
         else:
-            # self.setWindowFlags(QtCore.Qt.Window)
-            self.setVisible(False)
-            os.system('taskkill /F /IM '+self.setting.setting_dict['RclonePath'].split("/")[-1])
-            QtWidgets.qApp.quit()
-            # event.accept()
+            event.ignore()
