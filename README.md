@@ -1,6 +1,6 @@
 # EZRclone
 
-一个基于PyQt的rclone管理UI界面。
+替代raidrive，一个基于PyQt的rclone管理UI界面。
 
 ## 功能简介
 
