@@ -2,7 +2,7 @@ import json
 from utils.path import appdata_path
 import os
 
-class SettingManger():
+class SystemSettingManger():
     def __init__(self):
         self.setting_file_path = appdata_path()+"/qrclone/setting.json"
         if not os.path.exists(appdata_path()+"/qrclone"):

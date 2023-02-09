@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QSize
 from PyQt5 import QtCore
-from utils.setting import SettingManger
+from utils.setting import SystemSettingManger
 import os
 from utils.autorun import check
 from utils.path import appdata_path
@@ -18,7 +18,7 @@ import configparser
 import os
 import json
 
-from winds.settingWindow import SettingWidget
+from winds.settingWindow import SettingWidget, ChangeSettingWidget
 from winds.createNewMountWindow import CreateNewMountWidget
 
 import threading
@@ -30,7 +30,7 @@ class MainUI(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)        
         
-        self.setting = SettingManger()
+        self.setting = SystemSettingManger()
         self.setting.load()
         self.tasks = []
 
@@ -130,25 +130,23 @@ class MainUI(QMainWindow):
         remotesTab.setLayout(remotesTabMainLayerout)
         return remotesTab
     
+   
+
+
     def deletMountEvent(self):
         # print(self.mountsListWidget.selectedItems())
         if len(self.mountsListWidget.selectedIndexes()) == 0:
             print("先选择一个mount")
             return
-        print(self.mountsListWidget.selectedIndexes()[0].row())
-        print("aaaaa")
+        # print(self.mountsListWidget.selectedIndexes()[0].row())
+        # print("aaaaa")
         del_index = self.mountsListWidget.selectedIndexes()[0].row()
 
-        self.settingManger = SettingManger()
-        self.settingManger.load()
-        del self.settingManger.setting_dict['AutoMounts'][del_index]
-        self.settingManger.save()
+        self.SystemSettingManger = SystemSettingManger()
+        self.SystemSettingManger.load()
+        del self.SystemSettingManger.setting_dict['AutoMounts'][del_index]
+        self.SystemSettingManger.save()
         self.refreshMountsTab()
-        # with open(appdata_path()+"/qrclone/setting.json") as qrclone_file:
-        #     settings = json.load(qrclone_file)
-        #     print(settings['AutoMounts'])
-        #     print("settings")
-        #     del settings['AutoMounts'][del_index]
 
     def createNewMountEvent(self):
         self.child_window = CreateNewMountWidget(self.refreshMountsTab)
@@ -158,8 +156,6 @@ class MainUI(QMainWindow):
     def refreshMountsTab(self):
         with open(appdata_path()+"/qrclone/setting.json") as qrclone_file:
             settings = json.load(qrclone_file)
-            print(settings['AutoMounts'])
-            print("settings")
 
         self.mountsListWidget.clear()
         for mountSettingItem in settings['AutoMounts']:
@@ -185,31 +181,6 @@ class MainUI(QMainWindow):
         mountItem.setLayout(mountItemMainLayerout)
         return mountItem
 
-    # def buildRemotesItem(self,title):
-    #     print(title)
-    #     mountItem = QWidget()
-    #     # mountItemMainLayerout = QHBoxLayout()
-
-    #     # text = QLabel(title)
-    #     # remoteAbPathLable = QLabel("远程绝对路径：")
-    #     # remoteAbPath = QLineEdit()
-    #     # localDeviceIdLabel = QLabel("本地盘符：")
-    #     # localDeviceId = QLineEdit()
-    #     # autoMountCheckBox = QCheckBox("开启自动挂载")
-    #     # autoMountCheckBox.stateChanged.connect(self.autoMountCheckBoxStateChangedEvent)
-    #     # btn_config = QPushButton("Config")
-
-    #     # mountItemMainLayerout.addWidget(text)
-    #     # mountItemMainLayerout.addWidget(remoteAbPathLable)
-    #     # mountItemMainLayerout.addWidget(remoteAbPath)
-    #     # mountItemMainLayerout.addWidget(localDeviceIdLabel)
-    #     # mountItemMainLayerout.addWidget(localDeviceId)
-    #     # mountItemMainLayerout.addWidget(autoMountCheckBox)
-    #     # mountItemMainLayerout.addWidget(btn_config)
-        
-    #     # mountItem.setLayout(mountItemMainLayerout)
-    #     return mountItem
-
     def deleteDuplicate(self, li):
         l = li
         seen = set()
@@ -222,57 +193,7 @@ class MainUI(QMainWindow):
         
         return new_l
 
-    def autoMountCheckBoxStateChangedEvent(self):
-        # print("aaaa")
-        pButton = self.sender() #取信号发射对象
-        # print(pButton.parent().children())
-        self.settingManger = SettingManger()
-        self.settingManger.load()
-
-        mate_info = {
-            "name": pButton.parent().children()[1].text(),
-            "RemoteAbsolutePath": pButton.parent().children()[3].text(),
-            "LocalDeviceId": pButton.parent().children()[5].text(),
-        }
-
-        print(mate_info['RemoteAbsolutePath'].split(":")[-1])
-        print(os.path.isdir(mate_info['RemoteAbsolutePath'].split(":")[-1]))
-
-        self.settingManger.setting_dict["AutoMounts"].append(mate_info)
-        print(self.settingManger.setting_dict["AutoMounts"])
-        print(mate_info)
-        new_mounts_list = list(self.deleteDuplicate(self.settingManger.setting_dict["AutoMounts"]))
-        print(new_mounts_list)
-        self.settingManger.update(
-            "AutoMounts", 
-            new_mounts_list
-        )
-
     def buildRemotesTab(self):
-        # # baseWidget = QWidget()
-        # remotesTab = QWidget()
-        # remotesTabMainLayerout = QVBoxLayout()
-
-        # remotesTabBodyLayerout = QHBoxLayout()
-        # remotesTabButtonLayerout = QHBoxLayout()
-
-        # self.mountsListWidget = QListWidget()
-        # self.refreshMountsTab()
-
-        # btn_config = QPushButton("Config")
-        # btn_mount= QPushButton("mount")
-        # spacerItem = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        # btn_ccc = QPushButton("ccc")
-        # remotesTabButtonLayerout.addWidget(btn_config)
-        # remotesTabButtonLayerout.addWidget(btn_mount)
-        # remotesTabButtonLayerout.addItem(spacerItem)
-        # remotesTabButtonLayerout.addWidget(btn_ccc)
-
-        # remotesTabMainLayerout.addWidget(self.mountsListWidget)
-        # remotesTabMainLayerout.addLayout(remotesTabButtonLayerout)
-
-        # remotesTab.setLayout(remotesTabMainLayerout)
-        # return remotesTab
         remotesTab = QWidget()
         remotesTabMainLayerout = QVBoxLayout()
 
@@ -281,6 +202,10 @@ class MainUI(QMainWindow):
 
         self.remotesListWidget = QListWidget()
         self.refreshRemotesTab()
+
+        self.remotesListWidget.itemClicked.connect(self.showRemoteInfo)
+        self.remotesListWidget.itemDoubleClicked.connect(self.changeSettingEvent)#.DoubleClicked.connect(MainWindow.btnDoub_click)
+        self.remotesInfoLable = QLabel("")
 
         # btn_config = QPushButton("Config")
         btn_refresh = QPushButton("Refresh")
@@ -293,10 +218,34 @@ class MainUI(QMainWindow):
         # remotesTabButtonLayerout.addWidget(btn_ccc)
 
         remotesTabMainLayerout.addWidget(self.remotesListWidget)
+        remotesTabMainLayerout.addWidget(self.remotesInfoLable)
         remotesTabMainLayerout.addLayout(remotesTabButtonLayerout)
 
         remotesTab.setLayout(remotesTabMainLayerout)
         return remotesTab
+
+    def changeSettingEvent(self):
+        item = self.remotesListWidget.selectedItems()[0]
+        self.child_window = ChangeSettingWidget(item.text())
+        self.child_window.setWindowModality(Qt.ApplicationModal)
+        self.child_window.show()
+
+        item = self.remotesListWidget.selectedItems()[0]
+
+        self.refreshRemotesTab()
+
+    def showRemoteInfo(self):
+        rclone_config_file = appdata_path()+"/rclone/rclone.conf"
+        rclone_conf = configparser.ConfigParser()
+        filename = rclone_conf.read(rclone_config_file)
+
+        item = self.remotesListWidget.selectedItems()[0]
+        show_text = ''
+        for ite in rclone_conf.items(item.text()):
+            show_text+=(ite[0]+":"+ite[1]+"\n")
+        # print(rclone_conf.items(item.text()))
+        # print(item.text())
+        self.remotesInfoLable.setText(show_text)
     
     def refreshRemotesTab(self):
         rclone_config_file = appdata_path()+"/rclone/rclone.conf"
@@ -305,6 +254,7 @@ class MainUI(QMainWindow):
 
         self.remotesListWidget.clear()
         for remotesListWidgetItem in rclone_conf.sections():
+            # print(remotesListWidgetItem)
             self.remotesListWidget.addItem(remotesListWidgetItem)
 
 
@@ -318,20 +268,7 @@ class MainUI(QMainWindow):
         os.system("del "+appdata_path()+"\qrclone\setting.json")
     
     def closeEvent(self, event):
-        result = QMessageBox.question(self, "标题", "确认退出吗？否则最小化到系统托盘", QMessageBox.Yes | QMessageBox.No)
-        # print(result)
-        # print(QMessageBox.Yes)
-        # print(QMessageBox.No)
-        if(result == QMessageBox.Yes):
-            # self.setWindowFlags(QtCore.Qt.Window)
-            self.setVisible(False)
-            # os.system('taskkill /F /IM '+self.setting.setting_dict['RclonePath'].split("/")[-1])
-            cmd = 'taskkill /F /IM '+self.setting.setting_dict['RclonePath'].split("/")[-1]
-            res = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            QtWidgets.qApp.quit()
-            # event.accept()
-        elif(result == QMessageBox.No):
-            self.setWindowFlags(QtCore.Qt.SplashScreen | QtCore.Qt.FramelessWindowHint)
-            event.ignore()
-        else:
-            event.ignore()
+
+        self.setWindowFlags(QtCore.Qt.SplashScreen | QtCore.Qt.FramelessWindowHint)
+        event.ignore()
+
