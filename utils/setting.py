@@ -1,5 +1,5 @@
 import json
-from path import appdata_path
+from utils.path import appdata_path
 import os
 
 class SettingManger():

@@ -7,10 +7,10 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QSize
-from setting import SettingManger
+from utils.setting import SettingManger
 import os
-from autorun import check
-from path import appdata_path
+from utils.autorun import check
+from utils.path import appdata_path
 # coding=utf-8
 import configparser
 import os

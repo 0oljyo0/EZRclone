@@ -9,10 +9,10 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QSize
 from PyQt5 import QtCore
-from setting import SettingManger
+from utils.setting import SettingManger
 import os
-from autorun import check
-from path import appdata_path
+from utils.autorun import check
+from utils.path import appdata_path
 # coding=utf-8
 import configparser
 import os
@@ -26,7 +26,7 @@ import threading
 import os
 import subprocess
 
-class BasicMenubar(QMainWindow):
+class MainUI(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)        
         
@@ -63,7 +63,7 @@ class BasicMenubar(QMainWindow):
         self.resize(512,512)
         self.initMenuBar()
         self.initCentrolWindow()
-        self.setWindowTitle('QRclone')    
+        self.setWindowTitle('EZRclone')    
         self.show()
 
     def initMenuBar(self):
@@ -93,14 +93,13 @@ class BasicMenubar(QMainWindow):
 
     def initCentrolWindow(self):
         remotesTab = self.buildRemotesTab()
-
         mountTab = self.buildMountsTab()
-        cccTab = QWidget()
+        # cccTab = QWidget()
 
         tabWidget = QTabWidget()
         tabWidget.addTab(remotesTab, "Remotes")
         tabWidget.addTab(mountTab, "Mounts")
-        tabWidget.addTab(cccTab, "ccc")
+        # tabWidget.addTab(cccTab, "ccc")
         self.setCentralWidget(tabWidget)
 
     def buildMountsTab(self):

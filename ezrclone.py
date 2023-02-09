@@ -3,7 +3,7 @@ import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 # import Ui_untitled
 import time
-from gui import BasicMenubar
+from winds.main_ui import MainUI
 from PyQt5 import QtCore
 import os
 import subprocess
@@ -88,7 +88,7 @@ if __name__ == '__main__':
  
     # # 显示一个非模式的对话框，用户可以随便切窗口，.exec()是模式对话框，用户不能随便切
     # MainWindow.show()
-    ex = BasicMenubar()
+    ex = MainUI()
     # ex.show()
     ti = TrayIcon(ex)
     ti.show()
