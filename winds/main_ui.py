@@ -18,7 +18,7 @@ import configparser
 import os
 import json
 
-from winds.settingWindow import SettingWidget, ChangeSettingWidget
+from winds.settingWindow import SystemSettingManger
 from winds.createNewMountWindow import CreateNewMountWidget
 
 import threading
@@ -204,7 +204,7 @@ class MainUI(QMainWindow):
         self.refreshRemotesTab()
 
         self.remotesListWidget.itemClicked.connect(self.showRemoteInfo)
-        self.remotesListWidget.itemDoubleClicked.connect(self.changeSettingEvent)#.DoubleClicked.connect(MainWindow.btnDoub_click)
+        # self.remotesListWidget.itemDoubleClicked.connect(self.changeSettingEvent)#.DoubleClicked.connect(MainWindow.btnDoub_click)
         self.remotesInfoLable = QLabel("")
 
         # btn_config = QPushButton("Config")
@@ -224,15 +224,15 @@ class MainUI(QMainWindow):
         remotesTab.setLayout(remotesTabMainLayerout)
         return remotesTab
 
-    def changeSettingEvent(self):
-        item = self.remotesListWidget.selectedItems()[0]
-        self.child_window = ChangeSettingWidget(item.text())
-        self.child_window.setWindowModality(Qt.ApplicationModal)
-        self.child_window.show()
+    # def changeSettingEvent(self):
+    #     item = self.remotesListWidget.selectedItems()[0]
+    #     self.child_window = ChangeSystemSettingManger(item.text())
+    #     self.child_window.setWindowModality(Qt.ApplicationModal)
+    #     self.child_window.show()
 
-        item = self.remotesListWidget.selectedItems()[0]
+    #     item = self.remotesListWidget.selectedItems()[0]
 
-        self.refreshRemotesTab()
+    #     self.refreshRemotesTab()
 
     def showRemoteInfo(self):
         rclone_config_file = appdata_path()+"/rclone/rclone.conf"
@@ -259,7 +259,7 @@ class MainUI(QMainWindow):
 
 
     def settingEvent(self):
-        self.child_window = SettingWidget()
+        self.child_window = SystemSettingManger()
         self.child_window.setWindowModality(Qt.ApplicationModal)
         self.child_window.show()
 

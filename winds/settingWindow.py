@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QSize
-from utils.setting import SettingManger
+from utils.setting import SystemSettingManger
 import os
 from utils.autorun import check
 from utils.path import appdata_path
@@ -20,7 +20,7 @@ class SettingWidget(QWidget):
         super().__init__()
         # self.setWindowTitle("我是子窗口啊")
         self.rclonePath = ''
-        self.settingManger = SettingManger()
+        self.SystemSettingManger = SystemSettingManger()
 
         self.initAllWindow()
 
@@ -36,7 +36,7 @@ class SettingWidget(QWidget):
 
         btnFindRclone = QPushButton("浏览")
         settingFindRcloneLable = QLabel("Rclone.exe 路径")
-        self.settingFindRcloneLineEdit = QLineEdit(self.settingManger.setting_dict['RclonePath'])
+        self.settingFindRcloneLineEdit = QLineEdit(self.SystemSettingManger.setting_dict['RclonePath'])
         self.settingFindRcloneLineEdit.setReadOnly(True)
         settingFindRcloneLayerout = QHBoxLayout()
         btnFindRclone.clicked.connect(self.getRclonePath)
@@ -47,7 +47,7 @@ class SettingWidget(QWidget):
 
         btnRcloneConf = QPushButton("浏览")
         settingRcloneConfLable = QLabel("Rclone.conf 路径")
-        self.settingRcloneConfLineEdit = QLineEdit(self.settingManger.setting_dict['RcloneConfPath'])
+        self.settingRcloneConfLineEdit = QLineEdit(self.SystemSettingManger.setting_dict['RcloneConfPath'])
         self.settingRcloneConfLineEdit.setReadOnly(True)
         settingRcloneConfLayerout = QHBoxLayout()
         btnRcloneConf.clicked.connect(self.getRcloneConfPath)
@@ -56,7 +56,7 @@ class SettingWidget(QWidget):
         settingRcloneConfLayerout.addWidget(btnRcloneConf)
 
         self.autorunCheckBox = QCheckBox("开机启动")
-        if self.settingManger.setting_dict['AutoStart'] == "True":
+        if self.SystemSettingManger.setting_dict['AutoStart'] == "True":
             self.autorunCheckBox.setChecked(True)
         else:
             self.autorunCheckBox.setChecked(False)
@@ -70,19 +70,19 @@ class SettingWidget(QWidget):
     def getRclonePath(self):
         self.rclonePath, _ = QFileDialog.getOpenFileName(self, "打开文件", '.', '*.exe')
         self.settingFindRcloneLineEdit.setText(self.rclonePath)
-        self.settingManger.update('RclonePath', self.rclonePath)
+        self.SystemSettingManger.update('RclonePath', self.rclonePath)
 
     def getRcloneConfPath(self):
         self.rcloneConfPath, _ = QFileDialog.getOpenFileName(self, "打开文件", '.', '*.conf')
         self.settingRcloneConfLineEdit.setText(self.rcloneConfPath)
-        self.settingManger.update('RcloneConfPath', self.rcloneConfPath)
+        self.SystemSettingManger.update('RcloneConfPath', self.rcloneConfPath)
     
     def autorunEvent(self):
         if self.autorunCheckBox.isChecked():
-            self.settingManger.update('AutoStart', "True")
+            self.SystemSettingManger.update('AutoStart', "True")
             check(1)
         else:
-            self.settingManger.update('AutoStart', "False")
+            self.SystemSettingManger.update('AutoStart', "False")
             check(0)
 
 
@@ -92,8 +92,8 @@ class SettingWidget(QWidget):
 #         super().__init__()
 #         # self.setWindowTitle("我是子窗口啊")
 #         self.rclonePath = ''
-#         self.settingManger = SettingManger()
-#         self.settingManger.load()
+#         self.SystemSettingManger = SystemSettingManger()
+#         self.SystemSettingManger.load()
 
 #         self.initAllWindow()
 
@@ -109,7 +109,7 @@ class SettingWidget(QWidget):
 
 #         btnFindRclone = QPushButton("浏览")
 #         settingFindRcloneLable = QLabel("Rclone.exe 路径")
-#         self.settingFindRcloneLineEdit = QLineEdit(self.settingManger.setting_dict['RclonePath'])
+#         self.settingFindRcloneLineEdit = QLineEdit(self.SystemSettingManger.setting_dict['RclonePath'])
 #         self.settingFindRcloneLineEdit.setReadOnly(True)
 #         settingFindRcloneLayerout = QHBoxLayout()
 #         btnFindRclone.clicked.connect(self.getRclonePath)
@@ -120,7 +120,7 @@ class SettingWidget(QWidget):
 
 #         btnRcloneConf = QPushButton("浏览")
 #         settingRcloneConfLable = QLabel("Rclone.conf 路径")
-#         self.settingRcloneConfLineEdit = QLineEdit(self.settingManger.setting_dict['RcloneConfPath'])
+#         self.settingRcloneConfLineEdit = QLineEdit(self.SystemSettingManger.setting_dict['RcloneConfPath'])
 #         self.settingRcloneConfLineEdit.setReadOnly(True)
 #         settingRcloneConfLayerout = QHBoxLayout()
 #         btnRcloneConf.clicked.connect(self.getRcloneConfPath)
@@ -129,7 +129,7 @@ class SettingWidget(QWidget):
 #         settingRcloneConfLayerout.addWidget(btnRcloneConf)
 
 #         self.autorunCheckBox = QCheckBox("开机启动")
-#         if self.settingManger.setting_dict['AutoStart'] == "True":
+#         if self.SystemSettingManger.setting_dict['AutoStart'] == "True":
 #             self.autorunCheckBox.setChecked(True)
 #         else:
 #             self.autorunCheckBox.setChecked(False)
@@ -143,22 +143,22 @@ class SettingWidget(QWidget):
 #     def getRclonePath(self):
 #         self.rclonePath, _ = QFileDialog.getOpenFileName(self, "打开文件", '.', '*.exe')
 #         self.settingFindRcloneLineEdit.setText(self.rclonePath)
-#         self.settingManger.update('RclonePath', self.rclonePath)
+#         self.SystemSettingManger.update('RclonePath', self.rclonePath)
 
 #     def getRcloneConfPath(self):
 #         self.rcloneConfPath, _ = QFileDialog.getOpenFileName(self, "打开文件", '.', '*.conf')
 #         self.settingRcloneConfLineEdit.setText(self.rcloneConfPath)
-#         self.settingManger.update('RcloneConfPath', self.rcloneConfPath)
+#         self.SystemSettingManger.update('RcloneConfPath', self.rcloneConfPath)
     
 #     def autorunEvent(self):
 #         if self.autorunCheckBox.isChecked():
-#             self.settingManger.update('AutoStart', "True")
+#             self.SystemSettingManger.update('AutoStart', "True")
 #             check(1)
 #         else:
-#             self.settingManger.update('AutoStart', "False")
+#             self.SystemSettingManger.update('AutoStart', "False")
 #             check(0)
 
 #     def readInitSetting(self):
-#         self.settingFindRcloneLineEdit.setText(self.settingManger.setting_dict['RclonePath'])
-#         self.settingRcloneConfLineEdit.setText(self.settingManger.setting_dict['RcloneConfPath'])
-#         # self.autorunCheckBox.setChecked(self.settingManger.setting_dict[''])
+#         self.settingFindRcloneLineEdit.setText(self.SystemSettingManger.setting_dict['RclonePath'])
+#         self.settingRcloneConfLineEdit.setText(self.SystemSettingManger.setting_dict['RcloneConfPath'])
+#         # self.autorunCheckBox.setChecked(self.SystemSettingManger.setting_dict[''])
