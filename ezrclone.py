@@ -32,7 +32,7 @@ class TrayIcon(QtWidgets.QSystemTrayIcon):
         self.setContextMenu(self.menu)
  
         #设置图标
-        self.setIcon(QtGui.QIcon("icons/test.png"))
+        self.setIcon(QtGui.QIcon("icons/10242.png"))
         self.icon = self.MessageIcon()
  
         #把鼠标点击图标的信号和槽连接
