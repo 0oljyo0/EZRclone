@@ -18,7 +18,7 @@ import configparser
 import os
 import json
 
-from winds.settingWindow import SystemSettingManger
+from winds.settingWindow import SettingWidget
 from winds.createNewMountWindow import CreateNewMountWidget
 
 import threading
@@ -34,15 +34,17 @@ class MainUI(QMainWindow):
         self.setting.load()
         self.tasks = []
 
-        self.setWindowFlags(QtCore.Qt.SplashScreen | QtCore.Qt.FramelessWindowHint)
+        # self.setWindowFlags(QtCore.Qt.SplashScreen | QtCore.Qt.FramelessWindowHint)
         
         self.initAllWindow()
 
         print(self.setting.setting_dict)
 
         self.mountAll()
+        
+        
 
-        self.showMinimized()
+
     
     def mountAll(self):
         for mountInfo in self.setting.setting_dict['AutoMounts']:
@@ -170,7 +172,8 @@ class MainUI(QMainWindow):
         mountItem = QWidget()
         mountItemMainLayerout = QHBoxLayout()
 
-        text = QLabel("Remote Name:"+title['name'])
+        # text = QLabel("Remote Name:"+title['name'])
+        text = QLabel(title['name'])
         remoteAbPathLable = QLabel("远程绝对路径："+title['RemoteAbsolutePath'])
         localDeviceIdLabel = QLabel("本地绝对路径："+title['LocalDeviceId'])
 
@@ -259,7 +262,7 @@ class MainUI(QMainWindow):
 
 
     def settingEvent(self):
-        self.child_window = SystemSettingManger()
+        self.child_window = SettingWidget()#SystemSettingManger()
         self.child_window.setWindowModality(Qt.ApplicationModal)
         self.child_window.show()
 
@@ -269,6 +272,9 @@ class MainUI(QMainWindow):
     
     def closeEvent(self, event):
 
-        self.setWindowFlags(QtCore.Qt.SplashScreen | QtCore.Qt.FramelessWindowHint)
-        event.ignore()
+        # print("main ui close")
+
+        # self.setWindowFlags(QtCore.Qt.SplashScreen | QtCore.Qt.FramelessWindowHint)
+        # event.ignore()
+        event.accept()
 

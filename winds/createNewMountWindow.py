@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QSize
-from utils.setting import SettingManger
+from utils.setting import SystemSettingManger
 import os
 from utils.autorun import check
 from utils.path import appdata_path
@@ -20,7 +20,7 @@ class CreateNewMountWidget(QWidget):
         super().__init__()
         # self.setWindowTitle("我是子窗口啊")
         # self.rclonePath = ''
-        self.settingManger = SettingManger()
+        self.settingManger = SystemSettingManger()
 
         self.closeCallBack = closeCallBack
 
