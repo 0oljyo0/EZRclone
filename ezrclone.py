@@ -14,6 +14,11 @@ from PyQt5 import QtCore
 import os
 import subprocess
 
+from pypic.pic_space import tp_ico_base64
+import base64
+
+from PyQt5.QtGui import QPixmap
+
 if __name__ == '__main__':
     # pyqt窗口必须在QApplication方法中使用 
     # 每一个PyQt5应用都必须创建一个应用对象.sys.argv参数是来自命令行的参数列表.Python脚本可以从shell里运行.这是我们如何控制我们的脚本运行的一种方法.
@@ -22,14 +27,17 @@ if __name__ == '__main__':
     QApplication.setQuitOnLastWindowClosed(False)
  
     w = MainUI()
-    w.close()
+    w.hide()
     # w.show()
  
     # from PyQt5.QtWidgets import QSystemTrayIcon
     # from PyQt5.QtGui import QIcon
     # 在系统托盘处显示图标
     tp = QSystemTrayIcon(w)
-    tp.setIcon(QIcon('icons/10242.ico'))
+    tp_ico_bytes = base64.b64decode(tp_ico_base64)
+    icon = QIcon()
+    icon.addPixmap(QPixmap.fromImage(QtGui.QImage.fromData(tp_ico_bytes)))
+    tp.setIcon(icon)
     # 设置系统托盘图标的菜单
     a1 = QAction('&显示(Show)',triggered = w.show)
  
@@ -50,12 +58,7 @@ if __name__ == '__main__':
             tp.setVisible(False)
     a2 = QAction('&退出(Exit)',triggered = quitApp) # 直接退出可以用qApp.quit
  
-    tpMenu = QMenu()
-    tpMenu.addAction(a1)
-    tpMenu.addAction(a2)
-    tp.setContextMenu(tpMenu)
-    # 不调用show不会显示系统托盘
-    tp.show()
+    
     
    
     # # 信息提示
@@ -74,11 +77,18 @@ if __name__ == '__main__':
         # print("系统托盘的图标被点击了")
     tp.activated.connect(act)
     
+    tpMenu = QMenu()
+    tpMenu.addAction(a1)
+    tpMenu.addAction(a2)
+    tp.setContextMenu(tpMenu)
+    # 不调用show不会显示系统托盘
+    tp.show()
+    
     # sys为了调用sys.exit(0)退出程序
     # 最后,我们进入应用的主循环.事件处理从这里开始.主循环从窗口系统接收事件,分派它们到应用窗口.如果我们调用了exit()方法或者主窗口被销毁,则主循环结束.sys.exit()方法确保一个完整的退出.环境变量会被通知应用是如何结束的.
     # exec_()方法是有一个下划线的.这是因为exec在Python中是关键字.因此,用exec_()代替.
     sys.exit(app.exec_())
     
-    cmd = 'taskkill /F /IM '+w.setting.setting_dict['RclonePath'].split("/")[-1]
-    res = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # cmd = 'taskkill /F /IM '+w.setting.setting_dict['RclonePath'].split("/")[-1]
+    # res = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         

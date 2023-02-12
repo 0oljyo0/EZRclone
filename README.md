@@ -17,7 +17,7 @@
 ### 3.1.EZRclone打包exe
 
 ```cmd
-pyinstaller -F -w tray.py
+.\pack.bat
 ```
 ### 3.2.挂载驱动器
 先下载rclone，通过rclone配置好远程参数和远程名称，在EZRclone中配置好rclone.exe路径、rclone.conf路径、挂载参数、开机自启动，重启电脑即可自动挂载所有设置好的盘符。
