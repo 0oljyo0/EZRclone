@@ -1,0 +1,1 @@
+pyinstaller -F -w -D -i="icons\10242.ico" --add-data ".\\icons\\*;.\\icons" ezrclone.py

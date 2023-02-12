@@ -29,7 +29,7 @@ if __name__ == '__main__':
     # from PyQt5.QtGui import QIcon
     # 在系统托盘处显示图标
     tp = QSystemTrayIcon(w)
-    tp.setIcon(QIcon('icons/10242.png'))
+    tp.setIcon(QIcon('icons/10242.ico'))
     # 设置系统托盘图标的菜单
     a1 = QAction('&显示(Show)',triggered = w.show)
  
@@ -39,6 +39,9 @@ if __name__ == '__main__':
             QMessageBox.No, QMessageBox.No)
         if re == QMessageBox.Yes:
             # 关闭窗体程序
+            cmd = 'taskkill /F /IM '+w.setting.setting_dict['RclonePath'].split("/")[-1]
+            res = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
             QCoreApplication.instance().quit()
             # 在应用程序全部关闭后，TrayIcon其实还不会自动消失，
             # 直到你的鼠标移动到上面去后，才会消失，
@@ -75,3 +78,7 @@ if __name__ == '__main__':
     # 最后,我们进入应用的主循环.事件处理从这里开始.主循环从窗口系统接收事件,分派它们到应用窗口.如果我们调用了exit()方法或者主窗口被销毁,则主循环结束.sys.exit()方法确保一个完整的退出.环境变量会被通知应用是如何结束的.
     # exec_()方法是有一个下划线的.这是因为exec在Python中是关键字.因此,用exec_()代替.
     sys.exit(app.exec_())
+    
+    cmd = 'taskkill /F /IM '+w.setting.setting_dict['RclonePath'].split("/")[-1]
+    res = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        

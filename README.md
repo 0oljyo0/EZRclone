@@ -25,13 +25,13 @@ pyinstaller -F -w tray.py
 ## 4.部分界面展示
 
 remotes列表：
-![](icons\remotes.png)
+![](images\remotes.png)
 
 mounts列表：
-![](icons\mounts.png)
+![](images\mounts.png)
 
 setting界面：
-![](icons\setting.png)
+![](images\setting.png)
 
 ## 友情赞助
 如果这个项目对您有所帮助，您可以通过下面的方式来支持我们的后续开发，谢谢。
