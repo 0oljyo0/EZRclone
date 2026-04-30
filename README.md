@@ -12,6 +12,18 @@
 - 支持ui直接配置远程参数
 - 优化代码组织结构
 
+## 2.1 工程结构（已优化）
+
+```text
+EZRclone/
+├─ app/
+│  ├─ core/        # 配置、路径等基础能力
+│  └─ services/    # 外部能力（如 rclone 下载/检测）
+├─ winds/          # 现有 UI 层（Main/Setting/NewMount）
+├─ utils/          # 兼容层（保留旧 import，不破坏既有代码）
+└─ ezrclone.py     # 程序入口
+```
+
 ## 3.使用方法
 
 ### 3.1.EZRclone打包exe

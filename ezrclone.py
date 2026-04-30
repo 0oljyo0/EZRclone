@@ -18,6 +18,7 @@ from pypic.pic_space import tp_ico_base64
 import base64
 
 from PyQt5.QtGui import QPixmap
+from app.services.rclone_installer import ensure_rclone
 
 if __name__ == '__main__':
     # pyqt窗口必须在QApplication方法中使用 
@@ -26,6 +27,12 @@ if __name__ == '__main__':
     # 关闭所有窗口,也不关闭应用程序
     QApplication.setQuitOnLastWindowClosed(False)
  
+    try:
+        # 启动阶段只做快速检测，不阻塞 UI。
+        ensure_rclone(download_if_missing=False)
+    except Exception as err:
+        print("rclone 初始化检查失败:", err)
+
     w = MainUI()
     w.hide()
     # w.show()
@@ -39,7 +46,7 @@ if __name__ == '__main__':
     icon.addPixmap(QPixmap.fromImage(QtGui.QImage.fromData(tp_ico_bytes)))
     tp.setIcon(icon)
     # 设置系统托盘图标的菜单
-    a1 = QAction('&显示(Show)',triggered = w.show)
+    a1 = QAction('显示主界面',triggered = w.show)
  
     def quitApp():
         w.show() # w.hide() #隐藏
@@ -47,8 +54,10 @@ if __name__ == '__main__':
             QMessageBox.No, QMessageBox.No)
         if re == QMessageBox.Yes:
             # 关闭窗体程序
-            cmd = 'taskkill /F /IM '+w.setting.setting_dict['RclonePath'].split("/")[-1]
-            res = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            rclone_path = w.setting.setting_dict.get('RclonePath', '')
+            if rclone_path:
+                cmd = 'taskkill /F /IM '+rclone_path.split("/")[-1]
+                res = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
             QCoreApplication.instance().quit()
             # 在应用程序全部关闭后，TrayIcon其实还不会自动消失，
@@ -56,7 +65,7 @@ if __name__ == '__main__':
             # 这是个问题，（如同你terminate一些带TrayIcon的应用程序时出现的状况），
             # 这种问题的解决我是通过在程序退出前将其setVisible(False)来完成的。 
             tp.setVisible(False)
-    a2 = QAction('&退出(Exit)',triggered = quitApp) # 直接退出可以用qApp.quit
+    a2 = QAction('退出程序',triggered = quitApp) # 直接退出可以用qApp.quit
  
     
     

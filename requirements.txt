@@ -1,0 +1,5 @@
+PyQt5
+pywin32
+
+# Optional: needed only when building exe with pack.bat
+pyinstaller
