@@ -1,13 +1,14 @@
 import sys
+import html
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import (
     QMainWindow, QAction, qApp, QApplication, 
     QHBoxLayout,QVBoxLayout,QLabel,QPushButton,
     QWidget,QTabWidget,QListWidget,QSpacerItem,QSizePolicy,QFileDialog,QLineEdit,QFormLayout,QCheckBox,
-    QListWidgetItem, QMessageBox, QTableWidget, QAbstractItemView, QDialog, QProgressBar
+    QListWidgetItem, QMessageBox, QTableWidget, QAbstractItemView, QDialog, QProgressBar, QTextBrowser
 )
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt, QSize, QUrl
 from PyQt5 import QtCore
 from app.core.settings import SystemSettingManger
 import os
@@ -24,6 +25,7 @@ from winds.protocolMountWindow import ProtocolMountWindow
 from app.services.protocol_mount_service import ProtocolMountService
 from app.services.winfsp_installer import (
     ensure_winfsp,
+    is_winfsp_installed,
     DownloadCancelledError as WinFspCancelledError,
 )
 
@@ -133,6 +135,24 @@ class WinFspDownloadWorker(QtCore.QObject):
     def _on_progress(self, downloaded, total):
         self.progress_changed.emit(downloaded, total)
 
+
+class ProtocolMountStartWorker(QtCore.QObject):
+    finished = QtCore.pyqtSignal(str)
+    failed = QtCore.pyqtSignal(str, str)
+
+    def __init__(self, service, mount_id):
+        super().__init__()
+        self.service = service
+        self.mount_id = mount_id
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        try:
+            self.service.start_mount(self.mount_id)
+            self.finished.emit(self.mount_id)
+        except Exception as err:
+            self.failed.emit(self.mount_id, str(err))
+
 class MainUI(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)        
@@ -147,6 +167,12 @@ class MainUI(QMainWindow):
         self.winfspCancelEvent = None
         self.winfspCancelledByUser = False
         self.winfspTargetMountId = None
+        self.protocolStartThreads = {}
+        self.protocolStartWorkers = {}
+        self._cleanupDone = False
+        app = QApplication.instance()
+        if app is not None:
+            app.aboutToQuit.connect(self._cleanupBeforeExit)
 
         # self.setWindowFlags(QtCore.Qt.SplashScreen | QtCore.Qt.FramelessWindowHint)
         
@@ -156,7 +182,7 @@ class MainUI(QMainWindow):
         print(self.setting.setting_dict)
 
         self.mountAll()
-        self.protocol_service.start_autostart_mounts()
+        self._startProtocolAutostartMounts()
         
         
 
@@ -210,17 +236,17 @@ class MainUI(QMainWindow):
         """)
 
     def initMenuBar(self):
-        exitAction = QAction('&Exit', self)        
+        exitAction = QAction('退出', self)        
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('退出应用')
         exitAction.triggered.connect(qApp.quit)
 
-        setAction = QAction('&Setting', self)        
+        setAction = QAction('设置', self)        
         setAction.setShortcut('Ctrl+E')
         setAction.setStatusTip('打开设置')
         setAction.triggered.connect(self.settingEvent)
 
-        cleanSetAction = QAction('&CleanSetting', self)        
+        cleanSetAction = QAction('清理配置', self)        
         # cleanSetAction.setShortcut('Ctrl+E')
         cleanSetAction.setStatusTip('清理设置')
         cleanSetAction.triggered.connect(self.cleanSetting)
@@ -235,14 +261,8 @@ class MainUI(QMainWindow):
         setMenu = menubar.addMenu('帮助')
 
     def initCentrolWindow(self):
-        remotesTab = self.buildRemotesTab()
-        protocolMountTab = self.buildProtocolMountTab()
-        # cccTab = QWidget()
-
         tabWidget = QTabWidget()
-        tabWidget.addTab(remotesTab, "远程配置")
-        tabWidget.addTab(protocolMountTab, "协议挂载")
-        # tabWidget.addTab(cccTab, "ccc")
+        tabWidget.addTab(self.buildProtocolMountTab(), "挂载管理")
         self.setCentralWidget(tabWidget)
 
     def buildProtocolMountTab(self):
@@ -252,17 +272,20 @@ class MainUI(QMainWindow):
 
         self.protocolTable = QTableWidget()
         self.protocolTable.setColumnCount(6)
-        self.protocolTable.setHorizontalHeaderLabels(["名称", "协议", "主机/URL", "本地盘符", "自启动", "状态"])
+        self.protocolTable.setHorizontalHeaderLabels(["名称", "协议", "主机/URL", "本地挂载点", "自启动", "状态"])
         self.protocolTable.verticalHeader().setVisible(False)
         self.protocolTable.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
         self.protocolTable.setEditTriggers(QTableWidget.NoEditTriggers)
         self.protocolTable.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.protocolTable.setSelectionMode(QAbstractItemView.SingleSelection)
         self.protocolTable.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.protocolTable.doubleClicked.connect(lambda *_: self.editProtocolMountEvent())
         self.refreshProtocolMountTab()
 
         btn_new = QPushButton("新增")
         btn_new.clicked.connect(self.createProtocolMountEvent)
+        btn_edit = QPushButton("编辑")
+        btn_edit.clicked.connect(self.editProtocolMountEvent)
         btn_start = QPushButton("启动")
         btn_start.clicked.connect(self.startProtocolMountEvent)
         btn_stop = QPushButton("停止")
@@ -273,6 +296,7 @@ class MainUI(QMainWindow):
         btn_refresh.clicked.connect(self.refreshProtocolMountTab)
 
         btn_layout.addWidget(btn_new)
+        btn_layout.addWidget(btn_edit)
         btn_layout.addWidget(btn_start)
         btn_layout.addWidget(btn_stop)
         btn_layout.addWidget(btn_delete)
@@ -310,7 +334,16 @@ class MainUI(QMainWindow):
         return mounts[row]
 
     def createProtocolMountEvent(self):
-        self.protocolMountWindow = ProtocolMountWindow(self.refreshProtocolMountTab)
+        self.protocolMountWindow = ProtocolMountWindow(self.refreshProtocolMountTab, mount_data=None)
+        self.protocolMountWindow.setWindowModality(Qt.ApplicationModal)
+        self.protocolMountWindow.show()
+
+    def editProtocolMountEvent(self):
+        mount = self._current_protocol_mount()
+        if not mount:
+            QMessageBox.information(self, "提示", "请先选择一个协议挂载项。")
+            return
+        self.protocolMountWindow = ProtocolMountWindow(self.refreshProtocolMountTab, mount_data=mount)
         self.protocolMountWindow.setWindowModality(Qt.ApplicationModal)
         self.protocolMountWindow.show()
 
@@ -319,22 +352,7 @@ class MainUI(QMainWindow):
         if not mount:
             QMessageBox.information(self, "提示", "请先选择一个协议挂载项。")
             return
-        try:
-            self.protocol_service.start_mount(mount["id"])
-            self.statusBar().showMessage("协议挂载已启动。", 3000)
-        except Exception as err:
-            if "WinFsp" in str(err):
-                ret = QMessageBox.question(
-                    self,
-                    "缺少 WinFsp",
-                    "检测到未安装 WinFsp，是否现在下载并安装？",
-                    QMessageBox.Yes | QMessageBox.No,
-                    QMessageBox.Yes,
-                )
-                if ret == QMessageBox.Yes:
-                    self._startWinFspDownload(mount["id"])
-                    return
-            QMessageBox.critical(self, "启动失败", str(err))
+        self._startProtocolMountAsync(mount["id"])
         self.refreshProtocolMountTab()
 
     def stopProtocolMountEvent(self):
@@ -351,6 +369,28 @@ class MainUI(QMainWindow):
         if not mount:
             QMessageBox.information(self, "提示", "请先选择一个协议挂载项。")
             return
+        is_running = mount.get("status") in ("已启动", "运行中", "启动中") or bool(mount.get("pid"))
+        if is_running:
+            ret = QMessageBox.question(
+                self,
+                "确认删除",
+                "该挂载正在运行，删除前需要先停止进程。是否继续？",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes,
+            )
+            if ret != QMessageBox.Yes:
+                return
+            self.protocol_service.stop_mount(mount["id"])
+        else:
+            ret = QMessageBox.question(
+                self,
+                "确认删除",
+                "确认删除该挂载配置吗？",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+            if ret != QMessageBox.Yes:
+                return
         self.protocol_service.delete_mount(mount["id"])
         self.statusBar().showMessage("协议挂载已删除。", 3000)
         self.refreshProtocolMountTab()
@@ -704,6 +744,7 @@ class MainUI(QMainWindow):
         self.setting.load()
         QMessageBox.information(self, "完成", "rclone 下载成功：\n{}".format(rclone_path))
         self.statusBar().showMessage("rclone 已就绪。", 4000)
+        self._startProtocolAutostartMounts()
 
     def _onDownloadFailed(self, err_text):
         if self.downloadCancelledByUser:
@@ -778,7 +819,7 @@ class MainUI(QMainWindow):
             self.protocol_service.start_mount(self.winfspTargetMountId)
             self.statusBar().showMessage("协议挂载已启动。", 3000)
         except Exception as err:
-            QMessageBox.critical(self, "启动失败", str(err))
+            self._showErrorWithLogLink("启动失败", str(err))
         self.refreshProtocolMountTab()
 
     def _onWinFspDownloadFailed(self, err_text):
@@ -798,12 +839,153 @@ class MainUI(QMainWindow):
         self.winfspWorker = None
         self.winfspCancelEvent = None
         self.winfspDialog = None
+
+    def _startProtocolAutostartMounts(self):
+        self.setting.load()
+        if not self.setting.setting_dict.get("RclonePath"):
+            return
+        if not is_winfsp_installed():
+            self.statusBar().showMessage("未安装 WinFsp，已跳过协议挂载自启动。", 5000)
+            return
+        for item in self.protocol_service.list_mounts():
+            if item.get("auto_start"):
+                self._startProtocolMountAsync(item["id"], silent=True)
+        self.refreshProtocolMountTab()
+
+    def _startProtocolMountAsync(self, mount_id, silent=False):
+        if mount_id in self.protocolStartThreads:
+            thread = self.protocolStartThreads[mount_id]
+            if thread is not None and thread.isRunning():
+                if not silent:
+                    self.statusBar().showMessage("该挂载正在启动中，请稍候。", 3000)
+                return
+
+        self.protocol_service._update_mount_status(mount_id, "启动中")
+        self.refreshProtocolMountTab()
+
+        thread = QtCore.QThread(self)
+        worker = ProtocolMountStartWorker(self.protocol_service, mount_id)
+        worker.moveToThread(thread)
+
+        thread.started.connect(worker.run)
+        worker.finished.connect(lambda mid=mount_id, s=silent: self._onProtocolStartSuccess(mid, s))
+        worker.failed.connect(lambda mid, err, s=silent: self._onProtocolStartFailed(mid, err, s))
+        worker.finished.connect(thread.quit)
+        worker.failed.connect(thread.quit)
+        worker.finished.connect(worker.deleteLater)
+        worker.failed.connect(worker.deleteLater)
+        thread.finished.connect(lambda mid=mount_id: self._cleanupProtocolStartTask(mid))
+        thread.finished.connect(thread.deleteLater)
+
+        self.protocolStartThreads[mount_id] = thread
+        self.protocolStartWorkers[mount_id] = worker
+        thread.start()
+
+    def _onProtocolStartSuccess(self, mount_id, silent):
+        if not silent:
+            self.statusBar().showMessage("协议挂载已启动。", 3000)
+        self.refreshProtocolMountTab()
+
+    def _onProtocolStartFailed(self, mount_id, err_text, silent):
+        if "WinFsp" in err_text:
+            ret = QMessageBox.question(
+                self,
+                "缺少 WinFsp",
+                "检测到未安装 WinFsp，是否现在下载并安装？",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes,
+            )
+            if ret == QMessageBox.Yes:
+                self._startWinFspDownload(mount_id)
+                return
+        if not silent:
+            self._showErrorWithLogLink("启动失败", err_text)
+        self.refreshProtocolMountTab()
+
+    def _cleanupProtocolStartTask(self, mount_id):
+        self.protocolStartThreads.pop(mount_id, None)
+        self.protocolStartWorkers.pop(mount_id, None)
     
     def closeEvent(self, event):
-
-        # print("main ui close")
-
-        # self.setWindowFlags(QtCore.Qt.SplashScreen | QtCore.Qt.FramelessWindowHint)
-        # event.ignore()
+        self._cleanupBeforeExit()
         event.accept()
+
+    def _cleanupBeforeExit(self):
+        if self._cleanupDone:
+            return
+        self._cleanupDone = True
+        try:
+            self.protocol_service.stop_all_mounts()
+        except Exception:
+            pass
+
+        # 退出前取消下载任务，避免残留线程
+        if hasattr(self, "downloadCancelEvent") and self.downloadCancelEvent is not None:
+            self.downloadCancelEvent.set()
+        if hasattr(self, "downloadThread") and self.downloadThread is not None and self.downloadThread.isRunning():
+            self.downloadThread.quit()
+            self.downloadThread.wait(1500)
+
+        if self.winfspCancelEvent is not None:
+            self.winfspCancelEvent.set()
+        if self.winfspThread is not None and self.winfspThread.isRunning():
+            self.winfspThread.quit()
+            self.winfspThread.wait(1500)
+
+        for mount_id, thread in list(self.protocolStartThreads.items()):
+            if thread is not None and thread.isRunning():
+                thread.quit()
+                thread.wait(1000)
+            self.protocolStartThreads.pop(mount_id, None)
+            self.protocolStartWorkers.pop(mount_id, None)
+
+        rclone_path = self.setting.setting_dict.get("RclonePath", "")
+        rclone_exe = os.path.basename(rclone_path) if rclone_path else "rclone.exe"
+        subprocess.run(
+            'taskkill /F /IM "{}" /T'.format(rclone_exe),
+            shell=True,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+    def _showErrorWithLogLink(self, title, err_text):
+        marker = "日志文件："
+        log_path = ""
+        plain_error = err_text
+        if marker in err_text:
+            plain_error, log_path = err_text.split(marker, 1)
+            plain_error = plain_error.strip()
+            log_path = log_path.strip()
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle(title)
+        dialog.resize(620, 260)
+
+        layout = QVBoxLayout()
+        browser = QTextBrowser(dialog)
+        browser.setOpenExternalLinks(True)
+
+        html_text = "<b>{}</b><br><br>{}".format(
+            html.escape(title),
+            html.escape(plain_error).replace("\n", "<br>"),
+        )
+        if log_path:
+            file_url = QUrl.fromLocalFile(log_path).toString()
+            html_text += "<br><br><a href='{}'>点击打开日志文件</a><br><span>{}</span>".format(
+                html.escape(file_url),
+                html.escape(log_path),
+            )
+        browser.setHtml(html_text)
+        layout.addWidget(browser)
+
+        btn_row = QHBoxLayout()
+        btn_row.addStretch(1)
+        close_btn = QPushButton("关闭")
+        close_btn.clicked.connect(dialog.accept)
+        btn_row.addWidget(close_btn)
+        layout.addLayout(btn_row)
+
+        dialog.setLayout(layout)
+        dialog.exec_()
 
